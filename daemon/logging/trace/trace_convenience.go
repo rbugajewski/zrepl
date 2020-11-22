@@ -48,10 +48,12 @@ func WithTaskGroup(ctx context.Context, taskGroup string) (_ context.Context, ad
 	ctx, endSpan := WithSpan(ctx, taskGroup)
 	add = func(f func(context.Context)) {
 		wg.Add(1)
-		defer wg.Done()
-		ctx, endTask := WithTask(ctx, taskGroup)
-		defer endTask()
-		f(ctx)
+		go func() {
+			defer wg.Done()
+			ctx, endTask := WithTask(ctx, taskGroup)
+			defer endTask()
+			f(ctx)
+		}()
 	}
 	waitEnd = func() {
 		wg.Wait()
